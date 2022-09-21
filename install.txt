@@ -1,0 +1,17 @@
+neovim
+tmux
+python3
+terminator
+nautilus
+curl
+zsh
+xclip
+mpv
+vifm
+flameshot
+gimp
+neofetch
+wireshark
+nmap
+peek
+
