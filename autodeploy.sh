@@ -41,33 +41,6 @@ first_setup(){
 
 
 # Handle command line options. Not sure why this isn't working inside a function
-    while getopts "p c f d" o; do
-        case "${o}" in
-            # Pull config
-            p)
-                p=${OPTARG}
-                echo $TICK$BLUE"Pulling config from $remote_repo"$ENDCOLOR
-                ;;
-            # Commit config
-            c)
-                c=${OPTARG}
-                echo $TICK$BLUE"Commiting config to $remote_repo"$ENDCOLOR
-                ;;
-            # Full install
-            f)
-                f=${OPTARG}
-                echo $TICK$BLUE"Running full install"$ENDCOLOR
-                ;;
-            # Only install applications 
-            a)
-                d=${OPTARG}
-                echo $TICK$BLUE"Only installing applications"$ENDCOLOR
-                ;;
-            *)
-                usage
-                ;;
-        esac
-    done
 
 get_posture(){
 # This function is used to determine what kind of system the script is being deployed on. It will check for the following items:
@@ -95,8 +68,8 @@ get_posture(){
 
 install_apt(){
     echo $TICK$BLUE"Please input SUDO password"$ENDCOLOR
-    echo $TICK$GREEN"Running apt update and apt upgrade..."$ENDCOLOR ; sudo apt update -y> /dev/null 2>&1 && sudo apt upgrade -y > /dev/null 2>&1
-    echo $TICK$GREEN"Installing applications from $CONFIG_PATH/install.conf"$ENDCOLOR && xargs sudo apt install -y <$CONFIG_PATH/install.conf > /dev/null 2>&1
+    echo $TICK$GREEN"Running apt update and apt upgrade..."$ENDCOLOR ; sudo apt update && sudo apt upgrade -y  | grep "newly installed"
+    echo $TICK$GREEN"Installing applications from $CONFIG_PATH/global_applications.conf"$ENDCOLOR && xargs sudo apt install -y <$CONFIG_PATH/global_applications.conf | grep "Setting up"
 }
 
 stage_files(){
@@ -131,11 +104,44 @@ remote_push(){
 }
 
 main(){
+    # Check if this is the first time autodeploy is being ran
     if  !(test -d $CONFIG_PATH);then
         first_setup
     fi
-    stage_files
-    remote_push
+
+    # Process command line arugments
+    while getopts "p s f a" o; do
+        case "${o}" in
+            # Pull config
+            p)
+                p=${OPTARG}
+                echo $TICK$BLUE"Pushing config to $remote_repo"$ENDCOLOR
+                remote_push
+                ;;
+            # Commit config
+            s)
+                s=${OPTARG}
+                echo $TICK$GREEN"Staging config files to $BLUE$HOST_CONFIG_PATH"$ENDCOLOR
+                stage_files
+                ;;
+            # Full install
+            f)
+                f=${OPTARG}
+                echo $TICK$BLUE"Running full install"$ENDCOLOR
+
+                ;;
+            # Only install applications 
+            a)
+                a=${OPTARG}
+                echo $TICK$BLUE"Installing applications"$ENDCOLOR
+                install_apt 
+                ;;
+            *)
+                usage
+                ;;
+        esac
+    done
 }
 
-main
+# Run main funciton and pass it command line arguments
+main "$@"
