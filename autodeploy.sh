@@ -33,7 +33,7 @@ first_setup(){
     echo "config_name=$(hostname)" > $CONFIG_PATH/global_config.conf 
     echo "remote_repo="http://iroh.int:80/Graham/ConfigFiles.git"" >> $CONFIG_PATH/global_config.conf 
     echo "neovim\nmupdf" >> $CONFIG_PATH/global_applications.conf 
-    echo "~/.tmux" >> $CONFIG_PATH/global_dotFiles.conf 
+    echo "~/.tmux.conf" >> $CONFIG_PATH/global_dotFiles.conf 
     . $CONFIG_PATH/global_config.conf 
 
 }
