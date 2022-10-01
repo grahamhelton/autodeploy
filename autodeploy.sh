@@ -5,14 +5,15 @@ BLUE="\e[94m"
 GREEN="\e[32m"
 ENDCOLOR="\e[0m"
 TICK="[$GREEN+$ENDCOLOR] "
-TICK_MOVE="[$GREEN~>$ENDCOLOR] "
+TICK_MOVE="[$GREEN~~~>$ENDCOLOR] "
 TAB="--"
 CONFIG_PATH=~/.config/autodeploy
+BACKUP_DIR=$CONFIG_PATH/backup
 HOST_CONFIG_PATH=~/.config/autodeploy/$(hostname)_config/
+FILE_LOG=$HOST_CONFIG_PATH$(hostname)_files.log
 user=$(hostname)
 usage() { echo "Usage: $0 [-s <45|90>] [-p <string>]" 1>&2; exit 1; } # Copy and pasted, need to update
 
-clear
 echo $GREEN"-------------------------------------------------------------------"$ENDCOLOR
 echo $GREEN"*** $BLUE AutoDeploy - A pure bash configuration management tool$GREEN ***"$ENDCOLOR
 echo $GREEN"-------------------------------------------------------------------"$ENDCOLOR
@@ -33,7 +34,7 @@ first_setup(){
     echo "config_name=$(hostname)" > $CONFIG_PATH/global_config.conf 
     echo "remote_repo="http://iroh.int:80/Graham/ConfigFiles.git"" >> $CONFIG_PATH/global_config.conf 
     echo "neovim\nmupdf" >> $CONFIG_PATH/global_applications.conf 
-    echo "~/.tmux.conf" >> $CONFIG_PATH/global_dotFiles.conf 
+    echo ".tmux.conf" >> $CONFIG_PATH/global_dotFiles.conf 
     . $CONFIG_PATH/global_config.conf 
 
 }
@@ -68,25 +69,30 @@ get_posture(){
 
 install_apt(){
     echo $TICK$BLUE"Please input SUDO password"$ENDCOLOR
-    echo $TICK$GREEN"Running apt update and apt upgrade..."$ENDCOLOR ; sudo apt update && sudo apt upgrade -y  | grep "newly installed"
-    echo $TICK$GREEN"Installing applications from $CONFIG_PATH/global_applications.conf"$ENDCOLOR && xargs sudo apt install -y <$CONFIG_PATH/global_applications.conf | grep "Setting up"
+    echo $TICK$GREEN"Running apt update and apt upgrade..."$ENDCOLOR ; sudo apt update > /dev/null 2>&1 && sudo apt upgrade -y  > /dev/null 2>&1
+    echo $TICK$GREEN"Installing applications from $CONFIG_PATH/global_applications.conf"$ENDCOLOR && temp_output=$(xargs sudo apt install -y < $CONFIG_PATH/global_applications.conf)
+    echo $temp_output
 }
 
+
 stage_files(){
-    git -C $CONFIG_PATH pull
+    git -C $CONFIG_PATH pull origin main --allow-unrelated-histories
     # Grab files from around the system and move them to $CONFIG_PATH
     echo $TICK$GREEN"Staging Files!"$ENDCOLOR
     if test -d $HOST_CONFIG_PATH;then
-        echo $TAB$TICK$GREEN"Config file already found in $BLUE$CONFIG_PATH/$(hostname)_config"$ENDCOLOR
+        echo $TICK$GREEN"Config file already found in $BLUE$CONFIG_PATH/$(hostname)_config"$ENDCOLOR
     else
         mkdir -p $HOST_CONFIG_PATH
         echo $TICK$GREEN"Created config file in $BLUE$CONFIG_PATH/$(hostname)_config"$ENDCOLOR
     fi
     # Copy each line in $CONFIG_PATH/global_dotFiles.conf to $HOST_CONFIG_PATH
+    cd $HOME
     while read line; do
-        cp -rf $HOME/$line $HOST_CONFIG_PATH 
+        cp -rvf --parents $line $HOST_CONFIG_PATH | grep "^'" | awk '{print $1}' | sed "s/'//g" | sed 's@'"$HOME"'@$HOME@' >> $HOST_CONFIG_PATH/$(hostname)_files.log
+        # Going to need to add sorting somewhere in here because this log will keep growing
         echo $TICK_MOVE$GREEN"Copied $BLUE$line$GREEN to $BLUE$HOST_CONFIG_PATH"$ENDCOLOR
     done < $CONFIG_PATH/global_dotFiles.conf
+    cd $CONFIG_PATH 
     echo $TICK$GREEN"Configuration files saved to $BLUE$HOST_CONFIG_PATH$GREEN, ready to push!"$ENDCOLOR
 
 }
@@ -99,8 +105,28 @@ remote_push(){
     echo $TICK$GREEN"Commiting"$ENDCOLOR
     git commit -m "Autodeploy from $(hostname) on $(date)"
     echo $TICK$GREEN"Pushing"$ENDCOLOR
-    git push -u origin main --force
+    git push -u origin main 
 
+}
+
+backup_old(){
+    # Backs up all the files that will be overwritten by autodeploy
+    while read line; do
+        cp -rf $HOME/$line $BACKUP_DIR 
+        echo $TICK_MOVE$GREEN"Copied $BLUE$line$GREEN to $BLUE$BACKUP_DIR"$ENDCOLOR
+    done < $CON.conf # Fix
+
+}
+
+distribute_files(){
+    # Places files defined in global_dotFiles in correct folders
+    cd $HOST_CONFIG_PATH
+    for f in .[!.]* *; do
+        #echo $(pwd)
+        cp -rf $f ../testing 
+    done
+        #echo $TICK_MOVE$GREEN"Copied $BLUE$line$GREEN to $BLUE$BACKUP_DIR"$ENDCOLOR
+    
 }
 
 main(){
@@ -110,7 +136,7 @@ main(){
     fi
 
     # Process command line arugments
-    while getopts "p s f a" o; do
+    while getopts "d p s f a b" o; do
         case "${o}" in
             # Pull config
             p)
@@ -135,6 +161,16 @@ main(){
                 a=${OPTARG}
                 echo $TICK$BLUE"Installing applications"$ENDCOLOR
                 install_apt 
+                ;;
+            b)
+                b=${OPTARG}
+                echo $TICK$BLUE"Backing up current dotfiles to $BACKUP_DIR"$ENDCOLOR
+                backup_old 
+                ;;
+            d)
+                d=${OPTARG}
+                echo $TICK$BLUE"Distributing files to correct locations"$ENDCOLOR
+                distribute_files 
                 ;;
             *)
                 usage
