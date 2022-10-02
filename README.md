@@ -13,11 +13,12 @@ I work on so many different machines that keeping my configuration files and the
 - Pushing of files to a remote repository
 - *Staging* of files defined in `global_dotFiles.conf` into `~/.config/autodeploy/$(hostname)_config/`
 - Distributing config files in `$(hostname)_config/` to their correct locations
-- Backing up of local configuration files to `~/.config/autodeploy/$(hostname)_config/backup/` before overwriting them 
+- Backing up of local configuration files to `~/.config/autodeploy/$(hostname)_config/backup/` before overwriting them
+- Installing of any application defined in `global_applications`
 
 # Documentation
 
-`global_applicaitons.conf` -> The names of applications you wish to install via apt
+`global_applications.conf` -> The names of applications you wish to install via apt
 
 ```markdown
 neovim
