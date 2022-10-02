@@ -4,18 +4,23 @@ RED="\e[31m"
 BLUE="\e[94m"
 GREEN="\e[32m"
 ENDCOLOR="\e[0m"
+TITLE="\e[4m"
 TICK="[$GREEN+$ENDCOLOR] "
-TICK_MOVE="[$GREEN~~~>$ENDCOLOR] "
+TICK_MOVE="[$GREEN~>$ENDCOLOR] "
+TICK_BACKUP="[$GREEN<~~$ENDCOLOR] "
 TAB="--"
 CONFIG_PATH=~/.config/autodeploy
-BACKUP_DIR=$HOST_CONFIG_PATH/backup
 HOST_CONFIG_PATH=~/.config/autodeploy/$(hostname)_config/
+BACKUP_DIR=$HOST_CONFIG_PATH"backup/"
 FILE_LOG=$HOST_CONFIG_PATH$(hostname)_files.log
 user=$(hostname)
 usage() { echo "Usage: $0 [-s <45|90>] [-p <string>]" 1>&2; exit 1; } # Copy and pasted, need to update
 
 echo $GREEN"-------------------------------------------------------------------"$ENDCOLOR
 echo $GREEN"*** $BLUE AutoDeploy - A pure bash configuration management tool$GREEN ***"$ENDCOLOR
+echo $GREEN"-------------------------------------------------------------------"$ENDCOLOR
+
+echo $TICK$GREEN"Autodeploy config path is located at $BLUE$CONFIG_PATH"
 echo $GREEN"-------------------------------------------------------------------"$ENDCOLOR
 sleep 1
 first_setup(){
@@ -73,6 +78,10 @@ install_apt(){
     echo $TICK$GREEN"Installing applications from $CONFIG_PATH/global_applications.conf"$ENDCOLOR && temp_output=$(xargs sudo apt install -y < $CONFIG_PATH/global_applications.conf)
     echo $temp_output
 }
+list_configs(){
+    echo -n $BLUE
+    ls $CONFIG_PATH | grep "_config$"
+}
 
 
 stage_files(){
@@ -96,8 +105,16 @@ stage_files(){
     echo $TICK$GREEN"Configuration files saved to $BLUE$HOST_CONFIG_PATH$GREEN, ready to push!"$ENDCOLOR
 
 }
+pull_files(){
+    # Push files to $remote_repo
+    cd $CONFIG_PATH
+    echo $TICK$GREEN"Pulling Files"$ENDCOLOR
+    git -C $CONFIG_PATH pull origin main --allow-unrelated-histories
+    # This has an error during first time setup. If global files are already in the $CONFIG_PATH, the pull will fail because they'll be overwritten
 
-remote_push(){
+}
+
+remote_commit(){
     # Push files to $remote_repo
     cd $CONFIG_PATH
     echo $TICK$GREEN"Adding Files"$ENDCOLOR
@@ -111,10 +128,15 @@ remote_push(){
 
 backup_old(){
     # Backs up all the files that will be overwritten by autodeploy
+    mkdir -p $HOST_CONFIG_PATH"backup"
     while read line; do
-        cp -rf $HOME/$line $BACKUP_DIR 
-        echo $TICK_MOVE$GREEN"Copied $BLUE$line$GREEN to $BLUE$BACKUP_DIR"$ENDCOLOR
+        echo $TICK_BACKUP$GREEN"Backing up $BLUE$line$GREEN to $BLUE$BACKUP_DIR"
+        cp -rf $HOME/$line $BACKUP_DIR > /dev/null 2>&1; 
     done < $CONFIG_PATH/global_dotFiles.conf # Fix
+
+
+
+
 
 }
 
@@ -123,7 +145,8 @@ distribute_files(){
     cd $HOST_CONFIG_PATH
     for f in .[!.]* *; do
         echo "Copying $f to $HOME"
-        cp -rf $f $HOME 
+        cp -rf  $f $HOME 
+        # Going to need to figure out a way to move all files except for the backup folder
     done
         #echo $TICK_MOVE$GREEN"Copied $BLUE$line$GREEN to $BLUE$BACKUP_DIR"$ENDCOLOR
     
@@ -136,13 +159,23 @@ main(){
     fi
 
     # Process command line arugments
-    while getopts "d p s f a b" o; do
+    while getopts "d c p s f a b l" o; do
         case "${o}" in
             # Pull config
+            l)
+                c=${OPTARG}
+                echo $TICK$GREEN$TITLE"Listing available configuration files"$ENDCOLOR
+                list_configs 
+                ;;
+            c)
+                c=${OPTARG}
+                echo $TICK$BLUE"Commit config to $remote_repo"$ENDCOLOR
+                remote_commit
+                ;;
             p)
-                p=${OPTARG}
-                echo $TICK$BLUE"Pushing config to $remote_repo"$ENDCOLOR
-                remote_push
+                c=${OPTARG}
+                echo $TICK$BLUE"Pulling config from $remote_repo"$ENDCOLOR
+                pull_files 
                 ;;
             # Commit config
             s)
