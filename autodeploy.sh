@@ -156,11 +156,6 @@ backup_old(){
         echo $TICK_BACKUP$GREEN"Backing up $BLUE$line$GREEN to $BLUE$BACKUP_DIR"
         cp -rf $HOME/$line $BACKUP_DIR > /dev/null 2>&1; 
     done < $CONFIG_PATH/global_dotFiles.conf # Fix
-
-
-
-
-
 }
 
 distribute_files(){
@@ -173,7 +168,6 @@ distribute_files(){
         # Going to need to figure out a way to move all files except for the backup folder
     done
         #echo $TICK_MOVE$GREEN"Copied $BLUE$line$GREEN to $BLUE$BACKUP_DIR"$ENDCOLOR
-    
 }
 
 main(){
