@@ -15,6 +15,7 @@ I work on so many different machines that keeping my configuration files and the
 - Distributing config files in `$(hostname)_config/` to their correct locations
 - Backing up of local configuration files to `~/.config/autodeploy/$(hostname)_config/backup/` before overwriting them
 - Installing of any application defined in `global_applications`
+- Editing configuration files in `.config/autodeploy` through the autodeploy tool 
 
 # Documentation
 
