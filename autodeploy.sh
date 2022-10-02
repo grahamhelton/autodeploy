@@ -8,7 +8,7 @@ TICK="[$GREEN+$ENDCOLOR] "
 TICK_MOVE="[$GREEN~~~>$ENDCOLOR] "
 TAB="--"
 CONFIG_PATH=~/.config/autodeploy
-BACKUP_DIR=$CONFIG_PATH/backup
+BACKUP_DIR=$HOST_CONFIG_PATH/backup
 HOST_CONFIG_PATH=~/.config/autodeploy/$(hostname)_config/
 FILE_LOG=$HOST_CONFIG_PATH$(hostname)_files.log
 user=$(hostname)
@@ -114,7 +114,7 @@ backup_old(){
     while read line; do
         cp -rf $HOME/$line $BACKUP_DIR 
         echo $TICK_MOVE$GREEN"Copied $BLUE$line$GREEN to $BLUE$BACKUP_DIR"$ENDCOLOR
-    done < $CON.conf # Fix
+    done < $CONFIG_PATH/global_dotFiles.conf # Fix
 
 }
 
@@ -122,8 +122,8 @@ distribute_files(){
     # Places files defined in global_dotFiles in correct folders
     cd $HOST_CONFIG_PATH
     for f in .[!.]* *; do
-        #echo $(pwd)
-        cp -rf $f ../testing 
+        echo "Copying $f to $HOME"
+        cp -rf $f $HOME 
     done
         #echo $TICK_MOVE$GREEN"Copied $BLUE$line$GREEN to $BLUE$BACKUP_DIR"$ENDCOLOR
     
