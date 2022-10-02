@@ -3,16 +3,19 @@
 RED="\e[31m"
 BLUE="\e[94m"
 GREEN="\e[32m"
+YELLOW="\e[33m"
 ENDCOLOR="\e[0m"
 TITLE="\e[4m"
 TICK="[$GREEN+$ENDCOLOR] "
 TICK_MOVE="[$GREEN~>$ENDCOLOR] "
 TICK_BACKUP="[$GREEN<~~$ENDCOLOR] "
+TICK_INPUT="[$YELLOW!$ENDCOLOR] "
 TAB="--"
 CONFIG_PATH=~/.config/autodeploy
 HOST_CONFIG_PATH=~/.config/autodeploy/$(hostname)_config/
 BACKUP_DIR=$HOST_CONFIG_PATH"backup/"
 FILE_LOG=$HOST_CONFIG_PATH$(hostname)_files.log
+remote_repo="http://iroh.int/Graham/ConfigFiles.git"
 user=$(hostname)
 usage() { echo "Usage: $0 [-s <45|90>] [-p <string>]" 1>&2; exit 1; } # Copy and pasted, need to update
 
@@ -22,29 +25,26 @@ echo $GREEN"-------------------------------------------------------------------"
 
 echo $TICK$GREEN"Autodeploy config path is located at $BLUE$CONFIG_PATH"
 echo $GREEN"-------------------------------------------------------------------"$ENDCOLOR
-sleep 1
 first_setup(){
     echo $TICK$GREEN"Running first time setup"$ENDCOLOR
     echo $TICK$GREEN"Creating Configuration Files in $BLUE~/.config/autodeploy/ "$ENDCOLOR
     mkdir -p ~/.config/autodeploy/ 
-    echo $TICK$GREEN"Add your git repository by editing $BLUE~/.config/autodeploy/global_config.conf"$ENDCOLOR # Change this to accept user input
-    echo "config_name=$(hostname)" > $CONFIG_PATH/global_config.conf 
-    echo "remote_repo="http://iroh.int/Graham/ConfigFiles.git"" >> $CONFIG_PATH/global_config.conf 
-    . ~/.config/autodeploy/global_config.conf 
+
+    echo $TICK$GREEN"Welcome to first time setup"$ENDCOLOR
+    echo $TICK$GREEN"Enter your remote git repository URL"$ENDCOLOR
+    echo $TICK$GREEN"For example: $BLUE"https://github.com/grahamhelton/DotFiles""$ENDCOLOR
+
+    echo -n $TICK_INPUT$GREEN"Enter Remote Repository URL: $YELLOW"
+    read remote_repo
+    echo $TICK$GREEN"Setting Remote Repository to: $YELLOW$remote_repo "
+
+    #. ~/.config/autodeploy/global_config.conf 
     cd $CONFIG_PATH
     git init > /dev/null 2>&1; 
     git remote add origin $remote_repo > /dev/null 2>&1; 
     git checkout -b main> /dev/null 2>&1; 
-    
-    echo "config_name=$(hostname)" > $CONFIG_PATH/global_config.conf 
-    echo "remote_repo="http://iroh.int:80/Graham/ConfigFiles.git"" >> $CONFIG_PATH/global_config.conf 
-    echo "neovim\nmupdf" >> $CONFIG_PATH/global_applications.conf 
-    echo ".tmux.conf" >> $CONFIG_PATH/global_dotFiles.conf 
-    . $CONFIG_PATH/global_config.conf 
 
 }
-
-
 
 # Handle command line options. Not sure why this isn't working inside a function
 
@@ -105,11 +105,34 @@ stage_files(){
     echo $TICK$GREEN"Configuration files saved to $BLUE$HOST_CONFIG_PATH$GREEN, ready to push!"$ENDCOLOR
 
 }
+
+
+check_git(){
+    # Check if global_dotFiles.conf is in the current repo
+    if test -f "$CONFIG_PATH/global_dotFiles.conf";then
+        echo $RED"-------DEBUG--------"
+        echo $TICK$GREEN"Config file already found"$ENDCOLOR
+    else
+        echo $RED"-------DEBUG--------"
+        echo $TICK$GREEN"Config file not found, generating base configuration..."$ENDCOLOR
+        echo "config_name=$(hostname)" > $CONFIG_PATH/global_config.conf 
+        # Add $remote_repo to global_config 
+        echo "$remote_repo" >> $CONFIG_PATH/global_config.conf 
+        # Add default applications to global_applications
+        echo "curl\nneovim\nzsh" >> $CONFIG_PATH/global_applications.conf 
+        # Add default dot files to global_dotFiles.conf 
+        echo ".tmux.conf" >> $CONFIG_PATH/global_dotFiles.conf 
+
+        
+    fi
+}
+
 pull_files(){
     # Push files to $remote_repo
     cd $CONFIG_PATH
     echo $TICK$GREEN"Pulling Files"$ENDCOLOR
     git -C $CONFIG_PATH pull origin main --allow-unrelated-histories
+    check_git
     # This has an error during first time setup. If global files are already in the $CONFIG_PATH, the pull will fail because they'll be overwritten
 
 }
@@ -142,6 +165,7 @@ backup_old(){
 
 distribute_files(){
     # Places files defined in global_dotFiles in correct folders
+    backup_old
     cd $HOST_CONFIG_PATH
     for f in .[!.]* *; do
         echo "Copying $f to $HOME"
@@ -214,3 +238,4 @@ main(){
 
 # Run main funciton and pass it command line arguments
 main "$@"
+
