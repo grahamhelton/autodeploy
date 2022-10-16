@@ -147,7 +147,7 @@ collect_files(){
         # Copies all files listed in $HOST_CONFIG_PATH/autodeploy_files.conf recursively, verbosely, and forcefully to the staging area. Filters out un-needed lines, and logs them to $hostname_files.log
         cp -rvf --parents $line $HOST_CONFIG_PATH 2> /dev/null | grep "^'" | awk '{print $1}' | sed "s/'//g" | sed 's@'"$HOME"'@$HOME@' 2>/dev/null
         # Going to need to add sorting somewhere in here because this log will keep growing
-        echo -e $TICK_MOVE$GREEN" Copying $BLUE$line$GREEN to $BLUE$HOST_CONFIG_PATH if file exists"$ENDCOLOR
+        echo -e $TICK_MOVE$GREEN" Copying $BLUE$line$GREEN to $BLUE$HOST_CONFIG_PATH$GREEN if file exists"$ENDCOLOR
     done < $CONFIG_PATH/autodeploy_files.conf | grep -v "^#"
 
     cd $CONFIG_PATH 
@@ -268,10 +268,14 @@ main(){
     fi
 
     # Process command line arugments
-    while getopts "d n m c p s f a b l :e:" o; do
+    while getopts "h d n m c p s f a b l :e:" o; do
         case "${o}" in
+            h)
+                h=${OPTARG}
+                usage
+                ;;
             l)
-                c=${OPTARG}
+                l=${OPTARG}
                 echo -e $TICK$GREEN$TITLE"Listing available configuration files"$ENDCOLOR
                 list_configs 
                 ;;
