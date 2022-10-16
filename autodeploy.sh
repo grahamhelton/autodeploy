@@ -1,4 +1,5 @@
 #/bin/bash
+
 # Preamble 
 BOLD="\e[1m"
 RED="\e[31m"
@@ -20,6 +21,10 @@ FILE_LOG=$HOST_CONFIG_PATH$(hostname)_files.log
 remote_repo="http://iroh.int/Graham/ConfigFiles.git"
 user=$(hostname)
 selected_config=$HOST_CONFIG_PATH
+
+#
+# Prints usage information
+#
 
 usage() { 
 
@@ -57,6 +62,7 @@ first_setup(){
 # This function is run if the the directory ~/.config/autodeploy is not detected
 # It handles creating the configuration directory, establishing the git repository for configuration files, and initializing
 # the ~/.config/autodeploy/ as a git repository
+
     echo $TICK$GREEN"Running first time setup"$ENDCOLOR
     echo $TICK$GREEN"Creating Configuration Files in $BLUE~/.config/autodeploy/ "$ENDCOLOR
     mkdir -p ~/.config/autodeploy/ 
@@ -77,7 +83,7 @@ first_setup(){
 }
 
 get_posture(){
-# This function is used to determine if the current system has the required dependencies. Currently it only checks for apt and git
+# This function is used to determine if the current system has the required dependencies to run AutoDeploy
 
     # Change to wget -q --spider $remote_repo then check for return code with $?
     if  ping -c 1 8.8.8.8 > /dev/null 2>&1; then
@@ -99,11 +105,14 @@ get_posture(){
 }
 
 install_apps(){
-# This function is responsible for installing any applications(using the apt package manager) defined in ~/.config/autodeploy/autodeploy_apps.conf
+# This function is responsible for installing any applications (using apt) defined in ~/.config/autodeploy/autodeploy_apps.conf
     echo $TICK$BLUE"Please input SUDO password"$ENDCOLOR
+
+    # Runs sudo apt update and upgrade
     echo $TICK$GREEN"Running apt update and apt upgrade..."$ENDCOLOR ; sudo apt update > /dev/null 2>&1 && sudo apt upgrade -y  > /dev/null 2>&1
-    #echo "$install"
     echo $TICK$GREEN"Installing applications from $BLUE$CONFIG_PATH/autodeploy_apps.conf"$ENDCOLOR 
+
+    # Install each application listed in $CONFIG_PATH/autodeploy_apps 
     grep -v '^#' $CONFIG_PATH/autodeploy_apps.conf | while read -r line; do
         echo $TICK$GREEN"Installing $BLUE$line"$ENDCOLOR 
         sudo apt install $line -y > /dev/null 2>&1 #| grep -A 1 "NEW packages" | grep -v "NEW packages"
@@ -112,6 +121,7 @@ install_apps(){
 }
 
 list_configs(){
+    # Lists the config files found in ~/.config/autodeploy/*.conf
     echo $TICK$GREEN"Listing configs found in $BLUE$CONFIG_PATH"$ENDCOLOR
     echo -n $BLUE
     ls $CONFIG_PATH | grep "_config$"
@@ -119,8 +129,10 @@ list_configs(){
 
 
 collect_files(){
-    git -C $CONFIG_PATH pull origin main --allow-unrelated-histories #> /dev/null 2>&1
-    # Grab files from around the system and move them to $CONFIG_PATH
+    # Pulls files from the remote repository and checks to see if the configuration path already exists
+    git -C $CONFIG_PATH pull origin main --allow-unrelated-histories > /dev/null 2>&1
+
+    # Check if the configuration path already exists
     echo $TICK$GREEN"Moving files"$ENDCOLOR
     if test -d $HOST_CONFIG_PATH;then
         echo $TICK$GREEN"Creating files in$BLUE$CONFIG_PATH/$(hostname)_config"$ENDCOLOR
@@ -128,19 +140,24 @@ collect_files(){
         mkdir -p $HOST_CONFIG_PATH
         echo $TICK$GREEN"Creating files in$BLUE$CONFIG_PATH/$(hostname)_config"$ENDCOLOR
     fi
+
     # Copy each line in $CONFIG_PATH/autodeploy_files.conf to $HOST_CONFIG_PATH
     cd $HOME
     while read line; do
+        # Copies all files listed in $HOST_CONFIG_PATH/autodeploy_files.conf recursively, verbosely, and forcefully to the staging area. Filters out un-needed lines, and logs them to $hostname_files.log
         cp -rvf --parents $line $HOST_CONFIG_PATH | grep "^'" | awk '{print $1}' | sed "s/'//g" | sed 's@'"$HOME"'@$HOME@' >> $HOST_CONFIG_PATH/$(hostname)_files.log
         # Going to need to add sorting somewhere in here because this log will keep growing
         echo $TICK_MOVE$GREEN" Copied $BLUE$line$GREEN to $BLUE$HOST_CONFIG_PATH"$ENDCOLOR
     done < $HOST_CONFIG_PATH/autodeploy_files.conf | grep -v "^#"
+
     cd $CONFIG_PATH 
+
     echo $TICK$GREEN"Configuration files saved to $BLUE$HOST_CONFIG_PATH$GREEN. Files can be pushed to $BLUE$remote_repo$GREEN with$BLUE autodeploy -p$GREEN"$ENDCOLOR
 
 }
 
 edit_files() {
+    # Edit configuration files in $CONFIG_PATH
     if [ $OPTARG = "apps" ];then
         "${EDITOR:-vi}" $CONFIG_PATH/autodeploy_apps.conf
     elif [ $OPTARG = "config" ];then
@@ -174,31 +191,33 @@ select_config(){
 }
 
 check_git(){
-    # Check if autodeploy_files.conf is in the current repo
+    # Check if the autodeploy configuration files are are in the current repo. If not, creates them
     if ! test -f "$CONFIG_PATH/autodeploy_files.conf";then
         echo $TICK$GREEN"Config file not found, generating base configuration..."$ENDCOLOR
         echo "config_name=$(hostname)" > $CONFIG_PATH/autodeploy_config.conf 
+
         # Add $remote_repo to autodeploy_config 
         echo "$remote_repo" >> $CONFIG_PATH/autodeploy_config.conf 
+
         # Add default applications to autodeploy_apps
         echo "curl\nneovim\nzsh" > $CONFIG_PATH/autodeploy_apps.conf 
+
         # Add default dot files to autodeploy_files.conf 
         echo ".tmux.conf" > $CONFIG_PATH/autodeploy_files.conf 
     fi
 }
 
 get_files(){
-    # Push files to $remote_repo
+    # pulls files from origin 
     cd $CONFIG_PATH
     git -C $CONFIG_PATH pull origin main --allow-unrelated-histories # > /dev/null 2>&1; # Figure out how to check if repo exists
     check_git
     echo $TICK$GREEN"Pull complete"$ENDCOLOR
-    # This has an error during first time setup. If autodeploy files are already in the $CONFIG_PATH, the pull will fail because they'll be overwritten
 
 }
 
 remote_push(){
-    # Push files to $remote_repo
+    # Commit and push files to $remote_repo
     cd $CONFIG_PATH
     echo $TICK$GREEN"Adding Files"$ENDCOLOR
     git add . 
@@ -219,25 +238,27 @@ backup_old(){
 }
 
 new_client(){
-get_files
-collect_files
-install_apps
+    # Pulles files from origin, 
+    get_files
+    collect_files
+    install_apps
 }
 
 distribute_files(){
-    # Places files defined in autodeploy_file.conf in correct folders
+    # Places files defined in autodeploy_file.conf to the correct location in the file system 
     backup_old
     cd $CONFIG_PATH/$selected_config
+
+    # Need an odd for loop syntax because zsh handles file globs differently than bash 
     for f in .[!.]* *; do
         echo $TICK_MOVE$GREEN"Copying $BLUE$f$GREEN to $BLUE$HOME"
         cp -rf  $f $HOME # Going to need to figure out a way to move all files except for the backup folder
     done
-        #echo $TICK_MOVE$GREEN"Copied $BLUE$line$GREEN to $BLUE$BACKUP_DIR"$ENDCOLOR
 }
 
 main(){
     # Check if this is the first time autodeploy is being ran
-echo $selected_config
+    echo $selected_config
     if  !(test -d $CONFIG_PATH);then
         first_setup
 
@@ -251,7 +272,6 @@ echo $selected_config
     # Process command line arugments
     while getopts "d n m c p s f a b l :e:" o; do
         case "${o}" in
-            # Pull config
             l)
                 c=${OPTARG}
                 echo $TICK$GREEN$TITLE"Listing available configuration files"$ENDCOLOR
