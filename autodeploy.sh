@@ -238,7 +238,6 @@ backup_old(){
 
 new_client(){
     # Pulles files from origin, 
-    first_setup
     get_files
     collect_files
     install_apps
@@ -258,10 +257,8 @@ distribute_files(){
 
 main(){
     # Check if this is the first time autodeploy is being ran
-#    echo -e $selected_config
     if  !(test -d $CONFIG_PATH);then
         first_setup
-
     fi
 
     if [ $# -eq 0 ]; then
@@ -300,6 +297,7 @@ main(){
                 f=${OPTARG}
                 echo -e $TICK$BLUE"Re-running first time setup"$ENDCOLOR
 
+                # Add this feature
                 ;;
             a)
                 a=${OPTARG}
