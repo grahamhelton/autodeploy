@@ -148,7 +148,7 @@ collect_files(){
         cp -rvf --parents $line $HOST_CONFIG_PATH | grep "^'" | awk '{print $1}' | sed "s/'//g" | sed 's@'"$HOME"'@$HOME@' >> $HOST_CONFIG_PATH/$(hostname)_files.log
         # Going to need to add sorting somewhere in here because this log will keep growing
         echo -e $TICK_MOVE$GREEN" Copied $BLUE$line$GREEN to $BLUE$HOST_CONFIG_PATH"$ENDCOLOR
-    done < $HOST_CONFIG_PATH""autodeploy_files.conf | grep -v "^#"
+    done < $CONFIG_PATH/autodeploy_files.conf | grep -v "^#"
 
     cd $CONFIG_PATH 
 
