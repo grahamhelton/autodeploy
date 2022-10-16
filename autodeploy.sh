@@ -145,7 +145,7 @@ collect_files(){
     cd $HOME
     while read line; do
         # Copies all files listed in $HOST_CONFIG_PATH/autodeploy_files.conf recursively, verbosely, and forcefully to the staging area. Filters out un-needed lines, and logs them to $hostname_files.log
-        cp -rvf --parents $line $HOST_CONFIG_PATH | grep "^'" | awk '{print $1}' | sed "s/'//g" | sed 's@'"$HOME"'@$HOME@' >> $HOST_CONFIG_PATH/$(hostname)_files.log
+        cp -rvf --parents $line $HOST_CONFIG_PATH | grep "^'" | awk '{print $1}' | sed "s/'//g" | sed 's@'"$HOME"'@$HOME@' 2>&1 $HOST_CONFIG_PATH/$(hostname)_files.log 
         # Going to need to add sorting somewhere in here because this log will keep growing
         echo -e $TICK_MOVE$GREEN" Copied $BLUE$line$GREEN to $BLUE$HOST_CONFIG_PATH"$ENDCOLOR
     done < $CONFIG_PATH/autodeploy_files.conf | grep -v "^#"
