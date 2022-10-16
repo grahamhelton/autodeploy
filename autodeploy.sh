@@ -128,16 +128,17 @@ list_configs(){
 
 
 collect_files(){
+    echo -e $TICK$GREEN"Collecting files from around the system"$ENDCOLOR
     # Pulls files from the remote repository and checks to see if the configuration path already exists
     git -C $CONFIG_PATH pull origin main --allow-unrelated-histories > /dev/null 2>&1
 
     # Check if the configuration path already exists
     echo -e $TICK$GREEN"Moving files"$ENDCOLOR
     if test -d $HOST_CONFIG_PATH;then
-        echo -e $TICK$GREEN"Creating files in$BLUE$CONFIG_PATH/$(hostname)_config"$ENDCOLOR
+        echo -e $TICK$GREEN"Creating files in $BLUE$CONFIG_PATH/$(hostname)_config"$ENDCOLOR
     else
         mkdir -p $HOST_CONFIG_PATH
-        echo -e $TICK$GREEN"Creating files in$BLUE$CONFIG_PATH/$(hostname)_config"$ENDCOLOR
+        echo -e $TICK$GREEN"Creating files in $BLUE$CONFIG_PATH/$(hostname)_config"$ENDCOLOR
     fi
 
     # Copy each line in $CONFIG_PATH/autodeploy_files.conf to $HOST_CONFIG_PATH
@@ -147,7 +148,7 @@ collect_files(){
         cp -rvf --parents $line $HOST_CONFIG_PATH | grep "^'" | awk '{print $1}' | sed "s/'//g" | sed 's@'"$HOME"'@$HOME@' >> $HOST_CONFIG_PATH/$(hostname)_files.log
         # Going to need to add sorting somewhere in here because this log will keep growing
         echo -e $TICK_MOVE$GREEN" Copied $BLUE$line$GREEN to $BLUE$HOST_CONFIG_PATH"$ENDCOLOR
-    done < $HOST_CONFIG_PATH/autodeploy_files.conf | grep -v "^#"
+    done < $HOST_CONFIG_PATH""autodeploy_files.conf | grep -v "^#"
 
     cd $CONFIG_PATH 
 
@@ -241,6 +242,7 @@ new_client(){
     get_files
     collect_files
     install_apps
+    
 }
 
 distribute_files(){
