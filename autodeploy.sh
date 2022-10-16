@@ -70,7 +70,7 @@ first_setup(){
 
     echo -e -n $TICK_INPUT$GREEN"Enter Remote Repository URL: $YELLOW"
     read remote_repo 
-    echo -e $NOCOLOR$TICK$GREEN"Setting Remote Repository to: $YELLOW$remote_repo "
+    echo -e $ENDCOLOR$TICK$GREEN"Setting Remote Repository to: $YELLOW$remote_repo "
 
     #. ~/.config/autodeploy/autodeploy_config.conf 
     cd $CONFIG_PATH
@@ -78,7 +78,7 @@ first_setup(){
     git remote add origin $remote_repo > /dev/null 2>&1; 
     git checkout -b main > /dev/null 2>&1; 
 
-    echo -e $NOCOLOR$TICK$GREEN"First time setup complete, use$BLUE autodeploy -f $GREEN to rerun first time setup"$NOCOLOR
+    echo -e $ENDCOLOR$TICK$GREEN"First time setup complete, use$BLUE autodeploy -f $GREEN to rerun first time setup"$ENDCOLOR
 }
 
 get_posture(){
@@ -223,8 +223,9 @@ remote_push(){
     git add . > /dev/null 2>&1
     echo -e $TICK$GREEN"Commiting"$ENDCOLOR
     git commit -m "Autodeploy from $(hostname) on $(date)" > /dev/null 2>&1
-    echo -e $TICK$GREEN"Pushing"$ENDCOLOR
+    echo -e $TICK$GREEN"Pushing..."$ENDCOLOR
     git push -u origin main > /dev/null 2>&1
+    echo -e $TICK$GREEN"Files have been pushed to $YELLOW$remote_repo"$ENDCOLOR
 
 }
 
