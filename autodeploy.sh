@@ -48,8 +48,6 @@ $BLUE Options:
   $GREEN-m$BLUE        [M]oves dotfiles defined in autodeploy_files.conf to their correct locations on the local machine 
   $GREEN-e <File> $BLUE[E]dits autodeploy's configuration files
   
-  --moored      Moored (anchored) mine.
-  --drifting    Drifting mine.
         "
         exit 0
 
@@ -76,10 +74,11 @@ first_setup(){
 
     #. ~/.config/autodeploy/autodeploy_config.conf 
     cd $CONFIG_PATH
-    git init #> /dev/null 2>&1; 
-    git remote add origin $remote_repo #> /dev/null 2>&1; 
-    git checkout -b main #> /dev/null 2>&1; 
+    git init > /dev/null 2>&1; 
+    git remote add origin $remote_repo > /dev/null 2>&1; 
+    git checkout -b main > /dev/null 2>&1; 
 
+    echo -e $NOCOLOR$TICK$GREEN"First time setup complete, use$BLUE autodeploy -f $GREEN to rerun first time setup"$NOCOLOR
 }
 
 get_posture(){
@@ -210,7 +209,7 @@ check_git(){
 get_files(){
     # pulls files from origin 
     cd $CONFIG_PATH
-    git -C $CONFIG_PATH pull origin main --allow-unrelated-histories # > /dev/null 2>&1; # Figure out how to check if repo exists
+    git -C $CONFIG_PATH pull origin main --allow-unrelated-histories  > /dev/null 2>&1; # Figure out how to check if repo exists
     check_git
     echo -e $TICK$GREEN"Pull complete"$ENDCOLOR
 
@@ -220,11 +219,11 @@ remote_push(){
     # Commit and push files to $remote_repo
     cd $CONFIG_PATH
     echo -e $TICK$GREEN"Adding Files"$ENDCOLOR
-    git add . 
+    git add . > /dev/null 2>&1
     echo -e $TICK$GREEN"Commiting"$ENDCOLOR
-    git commit -m "Autodeploy from $(hostname) on $(date)"
+    git commit -m "Autodeploy from $(hostname) on $(date)" > /dev/null 2>&1
     echo -e $TICK$GREEN"Pushing"$ENDCOLOR
-    git push -u origin main 
+    git push -u origin main > /dev/null 2>&1
 
 }
 
@@ -239,6 +238,7 @@ backup_old(){
 
 new_client(){
     # Pulles files from origin, 
+    first_setup
     get_files
     collect_files
     install_apps
@@ -258,11 +258,10 @@ distribute_files(){
 
 main(){
     # Check if this is the first time autodeploy is being ran
-    echo -e $selected_config
+#    echo -e $selected_config
     if  !(test -d $CONFIG_PATH);then
         first_setup
 
-        echo -e $NOCOLOR$TICK$GREEN"First time setup complete, use$BLUE autodeploy -f $GREEN to rerun first time setup"
     fi
 
     if [ $# -eq 0 ]; then
