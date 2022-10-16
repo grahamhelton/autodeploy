@@ -246,7 +246,7 @@ new_client(){
 distribute_files(){
     # Places files defined in autodeploy_file.conf to the correct location in the file system 
     backup_old
-    cd $CONFIG_PATH/$selected_config
+    cd $selected_config
 
     # Need an odd for loop syntax because zsh handles file globs differently than bash 
     for f in .[!.]* *; do
