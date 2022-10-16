@@ -266,11 +266,19 @@ main(){
     fi
 
     # Process command line arugments
-    while getopts "g h d n m c p s f a b l :e:" o; do
+    while getopts "D g h d n m c p s f a b l :e:" o; do
         case "${o}" in
             h)
                 h=${OPTARG}
                 usage
+                ;;
+            D)
+                D=${OPTARG}
+                echo $TICK_ERROR$RED"DELETING CONFIG FILES IN 5 SECONDS,$YELLOW PRESS CTRL+C TO CANCEL"$ENDCOLOR
+                sleep 5
+                rm ~/.config/autodeploy/ -rf
+                echo $TICK$GREEN"Config files deleted. Run$BLUE autodeploy -f$GREEN to run first time setup."$ENDCOLOR
+                
                 ;;
             l)
                 l=${OPTARG}
