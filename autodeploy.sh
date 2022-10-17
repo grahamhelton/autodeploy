@@ -32,8 +32,8 @@ echo  $GREEN"*** $BLUE AutoDeploy - A pure bash configuration management tool$GR
 echo  $GREEN"-------------------------------------------------------------------"$ENDCOLOR
 echo  "
 $BLUE Usage:
-  autodeploy -h 
-  autodeploy -e [apps|config|files]
+  $GREEN autodeploy $BLUE -h 
+  $GREEN autodeploy $BLUE -e [apps|config|files]
 
 $BLUE Options:
  $GREEN -h$BLUE        Show this [h]elp screen.
@@ -46,6 +46,9 @@ $BLUE Options:
   $GREEN-b$BLUE        [B]acks up files defined in autodeploy_files.conf
   $GREEN-m$BLUE        [M]oves dotfiles defined in autodeploy_files.conf to their correct locations on the local machine 
   $GREEN-e <File> $BLUE[E]dits autodeploy's configuration files
+            -$GREEN apps:$BLUE Configure what apps are installed using apt.
+            -$GREEN config:$BLUE Configure autodeploy settings. 
+            -$GREEN files:$BLUE Configure what config files you want to mark for operations.
   
         " $ENDCOLOR
         exit 0
