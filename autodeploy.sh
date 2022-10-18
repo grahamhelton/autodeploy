@@ -73,7 +73,7 @@ first_setup(){
 
     echo -n $TICK_INPUT$GREEN"Enter Remote Repository URL: $YELLOW"
     read remote_repo 
-    echo $ENDCOLOR$TICK$GREEN"Setting Remote Repository to: $YELLOW$remote_repo "
+    echo $ENDCOLOR$TICK$GREEN"Setting Remote Repository to: $YELLOW$remote_repo "$ENDCOLOR
 
     cd $CONFIG_PATH
     git init > /dev/null 2>&1; 
@@ -124,7 +124,8 @@ install_apps(){
 list_configs(){
     # Lists the config files found in ~/.config/autodeploy/*.conf
     echo -n $BLUE
-    ls $CONFIG_PATH | grep "_config$"
+    ls $CONFIG_PATH | grep "_conf"
+    echo $ENDCOLOR
 }
 
 
@@ -186,7 +187,7 @@ use_config(){
 select_config(){
         selected_config=$2
         if test -d "$CONFIG_PATH/$selected_config";then
-            echo $TICK$GREEN"$selected_config selected"
+            echo $TICK$GREEN"$selected_config selected"$ENDCOLOR
             distribute_files
         else
             echo $TICK_ERROR$YELLOW"Please select a valid file name!"$ENDCOLOR
@@ -199,16 +200,16 @@ check_git(){
     # Check if the autodeploy configuration files are are in the current repo. If not, creates them
     if ! test -f "$CONFIG_PATH/autodeploy_files.conf";then
         echo $TICK$GREEN"Config file not found, generating base configuration..."$ENDCOLOR
-        echo "config_name=$(hostname)" > $CONFIG_PATH/autodeploy_config.conf 
+        echo "config_name=$(hostname)" > $CONFIG_PATH/autodeploy_config.conf $ENDCOLOR
 
         # Add $remote_repo to autodeploy_config 
-        echo "$remote_repo" >> $CONFIG_PATH/autodeploy_config.conf 
+        echo "$remote_repo" >> $CONFIG_PATH/autodeploy_config.conf $ENDCOLOR
 
         # Add default applications to autodeploy_apps
-        echo "curl\nneovim\nzsh" > $CONFIG_PATH/autodeploy_apps.conf 
+        echo "curl\nneovim\nzsh" > $CONFIG_PATH/autodeploy_apps.conf$ENDCOLOR
 
         # Add default dot files to autodeploy_files.conf 
-        echo ".tmux.conf" > $CONFIG_PATH/autodeploy_files.conf 
+        echo ".tmux.conf" > $CONFIG_PATH/autodeploy_files.conf$ENDCOLOR
     fi
 }
 
@@ -259,7 +260,7 @@ distribute_files(){
     # Need an odd for loop syntax because zsh handles file globs differently than bash 
     for f in .[!.]* *; do # <- for each file that does or does not start with a .
         echo $TICK_MOVE$GREEN"Copying $BLUE$f$GREEN from $BLUE$selected_config$green $GREEN to $BLUE$HOME"$ENDCOLOR
-        cp -rvf `ls -A | grep -v "backup/"` $HOME
+        cp -rf `ls -A | grep -v "backup/"` $HOME
     done
 }
 
