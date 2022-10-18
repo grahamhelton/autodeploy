@@ -34,25 +34,27 @@ echo  "
 $BLUE Usage:
   $GREEN autodeploy $BLUE -h 
   $GREEN autodeploy $BLUE -e [apps|config|files]
+  $GREEN autodeploy $BLUE -u thinkpad_config
 
 $BLUE Options:
- $GREEN -h$BLUE        Show this [h]elp screen.
-  $GREEN-l$BLUE        [L]ist available configuration files 
-  $GREEN-p$BLUE        [P]ush files to remote repository
-  $GREEN-g$BLUE        [G]et files from the remote repository
-  $GREEN-c$BLUE        [C]ollect configuration files on the local file system and prepare them for a remote push (-p)
-  $GREEN-f$BLUE        Re-run [f]irst time setup 
-  $GREEN-a$BLUE        [I]nstalls applications found in autodeploy_apps.conf
+  $GREEN-a$BLUE        [A]pplications found in autodeploy_apps.conf are installed
   $GREEN-b$BLUE        [B]acks up files defined in autodeploy_files.conf
-  $GREEN-m$BLUE        [M]oves dotfiles defined in autodeploy_files.conf to their correct locations on the local machine 
+  $GREEN-c$BLUE        [C]ollect configuration files on the local file system and prepare them for a remote push (-p)
+  $GREEN-D$BLUE        [D]eletes your configuration files in ~/.config/autodeploy/
   $GREEN-e <File> $BLUE[E]dits autodeploy's configuration files
             -$GREEN apps:$BLUE Configure what apps are installed using apt.
             -$GREEN config:$BLUE Configure autodeploy settings. 
             -$GREEN files:$BLUE Configure what config files you want to mark for operations.
-  
-        " $ENDCOLOR
-        exit 0
+  $GREEN-f$BLUE        [F]irst time setup 
+  $GREEN-g$BLUE        [G]et files from the remote repository
+  $GREEN-h$BLUE        Show this [h]elp screen.
+  $GREEN-l$BLUE        [L]ist available configuration files 
+  $GREEN-m$BLUE        [M]oves dotfiles defined in autodeploy_files.conf to their correct locations on the local machine 
+  $GREEN-p$BLUE        [P]ush files to remote repository
+  $GREEN-u <file> $BLUE[U]se a different machine's configuration files 
 
+        "$ENDCOLOR
+    exit 0
 } 
 
 
@@ -73,7 +75,6 @@ first_setup(){
     read remote_repo 
     echo $ENDCOLOR$TICK$GREEN"Setting Remote Repository to: $YELLOW$remote_repo "
 
-    #. ~/.config/autodeploy/autodeploy_config.conf 
     cd $CONFIG_PATH
     git init > /dev/null 2>&1; 
     git remote add origin $remote_repo > /dev/null 2>&1; 
@@ -145,7 +146,7 @@ collect_files(){
     cd $HOME
     while read line; do
         # Copies all files listed in $HOST_CONFIG_PATH/autodeploy_files.conf recursively, verbosely, and forcefully to the staging area. Filters out un-needed lines, and logs them to $hostname_files.log
-        cp -rvf --parents $line $HOST_CONFIG_PATH 2> /dev/null | grep "^'" | awk '{print $1}' | sed "s/'//g" | sed 's@'"$HOME"'@$HOME@' 2>/dev/null
+        cp -rf --parents $line $HOST_CONFIG_PATH 2> /dev/null | grep "^'" | awk '{print $1}' | sed "s/'//g" | sed 's@'"$HOME"'@$HOME@' 2>/dev/null
         # Going to need to add sorting somewhere in here because this log will keep growing
         echo $TICK_MOVE$GREEN" Copying $BLUE$line$GREEN to $BLUE$HOST_CONFIG_PATH$GREEN if file exists"$ENDCOLOR
     done < $CONFIG_PATH/autodeploy_files.conf | grep -v "^#"
@@ -168,10 +169,14 @@ edit_files() {
         usage
     fi
 }
-move_dev(){
+
+use_config(){
     if [ -z "$2" ];then
-        echo $TICK$GREEN"No arguments supplied, using configuration in $BLUE$HOST_CONFIG_PATH"$ENDCOLOR
-        collect_files
+        echo $TICK_ERROR$YELLOW"Please specify the name of the config file you wish to use "$ENDCOLOR
+        echo $TICK_ERROR$YELLOW"For example:$BLUE autodeploy -u thinkpad_config$YELLOW listing valid configs:"$ENDCOLOR
+        echo $TICK_ERROR$YELLOW"Listing valid configs:"$ENDCOLOR
+        list_configs
+        #collect_files
     else
         select_config "$@"
     fi
@@ -179,12 +184,12 @@ move_dev(){
 
 }
 select_config(){
-        echo $TICK_ERROR$YELLOW"Please specify the name of the config file you wish to use"$ENDCOLOR
         selected_config=$2
         if test -d "$CONFIG_PATH/$selected_config";then
             echo $TICK$GREEN"$selected_config selected"
             distribute_files
         else
+            echo $TICK_ERROR$YELLOW"Please select a valid file name!"$ENDCOLOR
             list_configs
         fi
 
@@ -233,13 +238,13 @@ backup_old(){
     # Backs up all the files that will be overwritten by autodeploy
     mkdir -p $HOST_CONFIG_PATH"backup"
     while read line; do
-        echo $TICK_BACKUP$GREEN"Backing up $BLUE$line$GREEN to $BLUE$BACKUP_DIR"
+        echo $TICK_BACKUP$GREEN"Backing up $BLUE$line$GREEN to $BLUE$BACKUP_DIR"$ENDCOLOR
         cp -rf $HOME/$line $BACKUP_DIR > /dev/null 2>&1; 
-    done < $CONFIG_PATH/autodeploy_files.conf # Fix
+    done < $CONFIG_PATH/autodeploy_files.conf
 }
 
 new_client(){
-    # Pulles files from origin, 
+    # Pulles files from origin, places files on local machine into $HOST_CONFIG_PATH, and installs apps defined in autodeploy_apps.conf
     get_files
     collect_files
     install_apps
@@ -249,12 +254,12 @@ new_client(){
 distribute_files(){
     # Places files defined in autodeploy_file.conf to the correct location in the file system 
     backup_old
-    cd $selected_config
+    cd $CONFIG_PATH/$selected_config
 
     # Need an odd for loop syntax because zsh handles file globs differently than bash 
-    for f in .[!.]* *; do
-        echo $TICK_MOVE$GREEN"Copying $BLUE$f$GREEN to $BLUE$HOME"
-        cp -rf  $f $HOME # Going to need to figure out a way to move all files except for the backup folder
+    for f in .[!.]* *; do # <- for each file that does or does not start with a .
+        echo $TICK_MOVE$GREEN"Copying $BLUE$f$GREEN from $BLUE$selected_config$green $GREEN to $BLUE$HOME"$ENDCOLOR
+        cp -rvf `ls -A | grep -v "backup/"` $HOME
     done
 }
 
@@ -269,7 +274,7 @@ main(){
     fi
 
     # Process command line arugments
-    while getopts "D g h d n m c p s f a b l :e:" o; do
+    while getopts "D g h u n m c p s f a b l :e:" o; do
         case "${o}" in
             h)
                 h=${OPTARG}
@@ -295,7 +300,7 @@ main(){
                 ;;
             p)
                 c=${OPTARG}
-                echo $TICK$BLUE"Push config to $remote_repo"$ENDCOLOR
+                echo $TICK$GREEN"Pushing config to $remote_repo"$ENDCOLOR
                 remote_push
                 ;;
             g)
@@ -310,38 +315,34 @@ main(){
                 ;;
             f)
                 f=${OPTARG}
-                echo $TICK$BLUE"Re-running first time setup"$ENDCOLOR
+                echo $TICK$GREEN"Re-running first time setup"$ENDCOLOR
 
                 # Add this feature
                 ;;
             a)
                 a=${OPTARG}
-                echo $TICK$BLUE"Installing applications"$ENDCOLOR
+                echo $TICK$GREEN"Installing applications"$ENDCOLOR
                 install_apps 
                 ;;
             b)
                 b=${OPTARG}
-                echo $TICK$BLUE"Backing up current dotfiles to $BACKUP_DIR"$ENDCOLOR
+                echo $TICK$GREEN"Backing up current dotfiles to $BACKUP_DIR"$ENDCOLOR
                 backup_old 
                 ;;
             m)
                 m=${OPTARG}
-                echo $BOLD$BLUE"Move files to correct locations"$ENDCOLOR
-                echo $GREEN$BOLD"---------------------------------------"$ENDCOLOR
+                echo $BOLD$GREEN"Moving files to correct locations"$ENDCOLOR
                 distribute_files 
                 ;;
             n)
                 n=${OPTARG}
-                echo $BOLD$BLUE"Running full new client install"$ENDCOLOR
-                echo $GREEN$BOLD"---------------------------------------"$ENDCOLOR
+                echo $BOLD$GREEN"Running full new client install"$ENDCOLOR
                 new_client 
                 ;;
-            d)
-                d=${OPTARG}
-                echo $BOLD$BLUE"Running move dev"$ENDCOLOR
-                echo $OPTARG
-                echo $GREEN$BOLD"---------------------------------------"$ENDCOLOR
-                move_dev "$@"
+            u)
+                u=${OPTARG}
+                echo $TICK$GREEN"Selecting alternate configuration file"$ENDCOLOR
+                use_config "$@"
                 ;;
             ?)
                 usage
