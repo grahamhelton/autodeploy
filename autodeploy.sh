@@ -124,7 +124,7 @@ install_apps(){
 list_configs(){
     # Lists the config files found in ~/.config/autodeploy/*.conf
     echo -n $BLUE
-    ls $CONFIG_PATH | grep "conf"
+    ls $CONFIG_PATH | grep "_config$"
     echo $ENDCOLOR
 }
 
@@ -255,7 +255,7 @@ new_client(){
 distribute_files(){
     # Places files defined in autodeploy_file.conf to the correct location in the file system 
     backup_old
-    cd $CONFIG_PATH/$selected_config
+    cd $CONFIG_PATH""$selected_config
 
     # Need an odd for loop syntax because zsh handles file globs differently than bash 
     for f in .[!.]* *; do # <- for each file that does or does not start with a .
