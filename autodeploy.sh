@@ -1,4 +1,4 @@
-#/bin/bash
+/
 
 # Preamble 
 RED=`tput setaf 1`
@@ -124,7 +124,7 @@ install_apps(){
 list_configs(){
     # Lists the config files found in ~/.config/autodeploy/*.conf
     echo -n $BLUE
-    ls $CONFIG_PATH | grep "_conf"
+    ls $CONFIG_PATH | grep "conf"
     echo $ENDCOLOR
 }
 
