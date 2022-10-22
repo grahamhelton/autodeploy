@@ -8,14 +8,14 @@ GREEN=`tput setaf 2`
 #TITLE="\e[4m"
 TICK="[$GREEN+$ENDCOLOR] "
 TICK_MOVE="[$GREEN~>$ENDCOLOR]"
-TICK_BACKUP="[$GREEN<~~$ENDCOLOR] "
+TICK_BACKUP="[$GREEN<~$ENDCOLOR] "
 TICK_INPUT="[$YELLOW!$ENDCOLOR] "
 TICK_ERROR="[$RED!$ENDCOLOR] "
 TAB="--"
 CONFIG_PATH=~/.config/autodeploy
 HOST_CONFIG_PATH=~/.config/autodeploy/$(hostname)_config/
 BACKUP_DIR=$HOST_CONFIG_PATH"backup/"
-FILE_LOG=$HOST_CONFIG_PATH$(hostname)_files.log
+#FILE_LOG=$HOST_CONFIG_PATH$(hostname)_files.log
 remote_repo="http://iroh.int/Graham/ConfigFiles.git"
 user=$(hostname)
 selected_config=$HOST_CONFIG_PATH
@@ -145,9 +145,8 @@ collect_files(){
     # Copy each line in $CONFIG_PATH/autodeploy_files.conf to $HOST_CONFIG_PATH
     cd $HOME
     while read line; do
-        # Copies all files listed in $HOST_CONFIG_PATH/autodeploy_files.conf recursively, verbosely, and forcefully to the staging area. Filters out un-needed lines, and logs them to $hostname_files.log
-        cp -rf --parents $line $HOST_CONFIG_PATH 2> /dev/null | grep "^'" | awk '{print $1}' | sed "s/'//g" | sed 's@'"$HOME"'@$HOME@' 2>/dev/null
-        # Going to need to add sorting somewhere in here because this log will keep growing
+        # Copies all files listed in $HOST_CONFIG_PATH/autodeploy_files.conf recursively, verbosely, and forcefully to the staging area.
+        cp -rf --parents $line $HOST_CONFIG_PATH 
         echo $TICK_MOVE$GREEN" Copying $BLUE$line$GREEN to $BLUE$HOST_CONFIG_PATH$GREEN if file exists"$ENDCOLOR
     done < $CONFIG_PATH/autodeploy_files.conf | grep -v "^#"
 
