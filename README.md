@@ -21,6 +21,8 @@ I work on so many different machines that keeping my configuration files and the
 
 # Documentation
 
+All configuration files are stored in ~/.config/autodeploy/
+
 `autodeploy_apps.conf` -> The names of applications you wish to install via apt
 
 ```markdown
@@ -44,13 +46,6 @@ remote_repo=http://github.com/grahamhelton/configurationFiles
 .config/i3/config
 
 ```
-
-# Initial setup
-Autodeploy relies on having a git repository to store your configuration files. To get started, simply create an empty git repository and autodeploy will ask you where it is the first time you run it.
-
->Note: Please do not store any kind of secrets in a github repository
-
-![Autodeploy setup](https://grahamhelton.com/autodeploy_setup.png)
 
 ## Command line arguments
 
@@ -77,3 +72,12 @@ Autodeploy is fairly simple to use once you understand the switches. Here is a q
 `autodeploy -p`: Push files to remote directory. This takes files in the "staging directory" and pushes them to the remote repository. This is functionally the same as running `git push`
 
 `autodeploy -u`: Moves the files from a different computer's configuration file to the local machine. You can see which configuration files you can choose from by running `autodeploy -l`
+
+
+# Initial setup
+Autodeploy relies on having a git repository to store your configuration files. To get started, simply create an empty git repository and autodeploy will ask you where it is the first time you run it.
+
+>Note: Please do not store any kind of secrets in a github repository
+
+![Autodeploy setup](https://grahamhelton.com/autodeploy_setup.png)
+
