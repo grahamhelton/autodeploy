@@ -15,7 +15,6 @@ TAB="--"
 CONFIG_PATH=~/.config/autodeploy
 HOST_CONFIG_PATH=~/.config/autodeploy/$(hostname)_config/
 BACKUP_DIR=$HOST_CONFIG_PATH"backup/"
-#FILE_LOG=$HOST_CONFIG_PATH$(hostname)_files.log
 remote_repo="http://iroh.int/Graham/ConfigFiles.git"
 user=$(hostname)
 selected_config=$HOST_CONFIG_PATH
@@ -188,7 +187,6 @@ select_config(){
         if test -d "$CONFIG_PATH/$selected_config";then
             echo $TICK$GREEN"$selected_config selected"$ENDCOLOR
             HOST_CONFIG_PATH=$CONFIG_PATH/$2
-            echo config path is $HOST_CONFIG_PATH
             distribute_files
         else
             echo $TICK_ERROR$YELLOW"Please select a valid file name!"$ENDCOLOR
