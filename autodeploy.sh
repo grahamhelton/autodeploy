@@ -258,8 +258,7 @@ new_client(){
 distribute_files(){
     # Places files defined in autodeploy_file.conf to the correct location in the file system 
     backup_old
-    echo "cd $HOST_CONFIG_PATH"
-    exit
+    cd $HOST_CONFIG_PATH
 
 
     # Need an odd for loop syntax because zsh handles file globs differently than bash 
