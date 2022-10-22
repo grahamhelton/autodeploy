@@ -38,7 +38,9 @@ config_name=thinkpad
 remote_repo=http://github.com/grahamhelton/configurationFiles
 ```
 
-`autodeploy_files.conf` -> Configuration files you would like to carry over to different systems. It is important that you define files by their relative location to your home directory. For example, if I wanted to add a file to this, I would run `autodeploy -e files` and add a new file with it's path relative to $HOME such as: `.config/graham/myfolder/myfile.conf` and **NOT** `/home/graham/.config/graham/myfolder/myfile.conf`.
+`autodeploy_files.conf` -> Configuration files you would like to carry over to different systems. 
+
+> It is important that you define files by their relative location to your home directory. For example, if I wanted to add a file to this, I would run `autodeploy -e files` and add a new file with it's path relative to $HOME such as: `.config/graham/myfolder/myfile.conf` and **NOT** `/home/graham/.config/graham/myfolder/myfile.conf`.
 
 ```markdown
 .tmux
