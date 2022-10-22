@@ -179,6 +179,7 @@ use_config(){
         list_configs
         #collect_files
     else
+
         select_config "$@"
     fi
 
@@ -188,6 +189,8 @@ select_config(){
         selected_config=$2
         if test -d "$CONFIG_PATH/$selected_config";then
             echo $TICK$GREEN"$selected_config selected"$ENDCOLOR
+            HOST_CONFIG_PATH=$CONFIG_PATH/$2
+            echo config path is $HOST_CONFIG_PATH
             distribute_files
         else
             echo $TICK_ERROR$YELLOW"Please select a valid file name!"$ENDCOLOR
@@ -255,7 +258,9 @@ new_client(){
 distribute_files(){
     # Places files defined in autodeploy_file.conf to the correct location in the file system 
     backup_old
-    cd $CONFIG_PATH""$selected_config
+    echo "cd $HOST_CONFIG_PATH"
+    exit
+
 
     # Need an odd for loop syntax because zsh handles file globs differently than bash 
     for f in .[!.]* *; do # <- for each file that does or does not start with a .
