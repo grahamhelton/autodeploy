@@ -1,5 +1,4 @@
-/
-
+#! /bin/bash
 # Preamble 
 RED=`tput setaf 1`
 BLUE=`tput setaf 4`
