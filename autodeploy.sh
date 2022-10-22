@@ -15,7 +15,7 @@ TAB="--"
 CONFIG_PATH=~/.config/autodeploy
 HOST_CONFIG_PATH=~/.config/autodeploy/$(hostname)_config/
 BACKUP_DIR=$HOST_CONFIG_PATH"backup/"
-remote_repo="http://iroh.int/Graham/ConfigFiles.git"
+#remote_repo="http://iroh.int/Graham/ConfigFiles.git"
 user=$(hostname)
 selected_config=$HOST_CONFIG_PATH
 
