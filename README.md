@@ -48,6 +48,9 @@ remote_repo=http://github.com/grahamhelton/configurationFiles
 
 # Initial setup
 Autodeploy relies on having a git repository to store your configuration files. To get started, simply create an empty git repository and autodeploy will ask you where it is the first time you run it.
+
+>Note: Please do not store any kind of secrets in a github repository
+
 ![Autodeploy setup](https://grahamhelton.com/autodeploy_setup.png)
 
 ## Command line arguments
