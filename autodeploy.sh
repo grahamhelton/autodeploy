@@ -5,24 +5,18 @@ BLUE=`tput setaf 4`
 YELLOW=`tput setaf 3`
 ENDCOLOR=`tput sgr0`
 GREEN=`tput setaf 2`
-#TITLE="\e[4m"
 TICK="[$GREEN+$ENDCOLOR] "
 TICK_MOVE="[$GREEN~>$ENDCOLOR]"
 TICK_BACKUP="[$GREEN<~$ENDCOLOR] "
 TICK_INPUT="[$YELLOW!$ENDCOLOR] "
 TICK_ERROR="[$RED!$ENDCOLOR] "
-TAB="--"
 CONFIG_PATH=~/.config/autodeploy
 HOST_CONFIG_PATH=~/.config/autodeploy/$(hostname)_config/
 BACKUP_DIR=$HOST_CONFIG_PATH"backup/"
-#remote_repo="http://iroh.int/Graham/ConfigFiles.git"
 user=$(hostname)
 selected_config=$HOST_CONFIG_PATH
 
-#
 # Prints usage information
-#
-
 usage() { 
 
 echo  "${GREEN}-------------------------------------------------------------------"$ENDCOLOR
@@ -82,6 +76,7 @@ first_setup(){
 }
 
 get_posture(){
+# Not currently in use, will need to be used when more package managers are supported but for now APT is the only supported package manager
 # This function is used to determine if the current system has the required dependencies to run AutoDeploy
 
     # Change to wget -q --spider $remote_repo then check for return code with $?
